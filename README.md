@@ -46,6 +46,8 @@ DATASETS
 
 Images of the five crop types are downloaded from Kaggle datasets to "cropimages" directory. The trained images are written to the "data/crops_data" directory.
 
+Source for kaggle: https://www.kaggle.com/datasets/aman2000jaiswal/agriculture-crop-images
+
 Output of the predictions are saved to tiles_output csv files with the timestamp in the data directory.
 
 CODE
