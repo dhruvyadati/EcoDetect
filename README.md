@@ -16,30 +16,40 @@ Install deepforest from source code
 https://deepforest.readthedocs.io/en/latest/installation.html
 
 Install and activate conda packages
-> conda deactivate 
+> conda deactivate
+
 > conda env remove -n env_name
 
 > conda create -n deepforest python=3 pytorch torchvision -c pytorch
+
 > conda install pytorch-lightning -c conda-forge
 
 > conda activate deepforest
+
 > conda install deepforest -c conda-forge
+
 > conda install -c conda-forge albumentations
+
 > conda install -c conda-forge supervision
+
 > conda install huggingface_hub
+
 > conda config --append channels conda-forge
+
 > conda install numpy==1.22.4
 
 Configure VSCode to use the correct Python:
 In the terminal, find the current python version:
+
 python --version
 
-(deepforest) <dir>> % python --version
 Python 3.12.2
 
 In VSCode, press Ctrl+Shift+P (on Windows) then type:
 Python: Select Interpreter
-Use <CMD> + <Shift> + <P> on a Mac. 
+
+Use CMD + Shift + P on a Mac. 
+
 Select the current python version
 
 DATASETS
