@@ -1,3 +1,8 @@
+# Utility file to generate full-image-sized bounding boxes to make 
+# loading compatible with the source csv file format. 
+# This is for loading the full-sized images to train classification model. 
+# Full-sized images are not used in the detection model.
+
 from PIL import Image
 import os
 

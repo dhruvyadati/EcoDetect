@@ -1,3 +1,4 @@
+# Utility file to display dataset distribution.
 import matplotlib.pyplot as plt
 import pandas as pd
 import cv2
