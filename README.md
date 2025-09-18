@@ -1,4 +1,4 @@
-# EcoDetect - Agricultural Crop Detection and Classification
+# EcoDetect - Crop Detection and Classification
 
 ## INTRODUCTION
 
@@ -195,17 +195,26 @@ python VisualizeBoundingBoxesOfPredictedImages.py
 ```
 Run this to visualize previously predicted and archived image files. Unzip the previously loaded images into pred_output directory.
 
-### Step 3: Generate Analysis CSV
+### Step 3: Generate Analysis CSV 
 ```bash
 python CreatePredictedOutputScoresCSV.py
 ```
 Create a final CSV file with all the scores by merging all the individual tiles output csv files. This CSV file will be used to run analysis on accuracy scores of predictions.
 
-### Step 4: Export Results (Colab)
+### Step 4: Export Results 
 ```bash
 python CreatePredictedOutputZip.py
 ```
 Zip the predicted output files for download. Also remember to download the trained models.
+
+### Step 5: Prediction Analysis 
+```bash
+python PredictionAnalysisCorrectVsIncorrect.py
+python PredictionAnalysisForClassificationAccuracy.py
+python PredictionAnalysisForCanopyComplexity.py
+```
+Upload the predicted csv output files to Colab for analysis.
+
 
 ### Optional Utility Files
 
