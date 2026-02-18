@@ -2,26 +2,40 @@
 
 ## INTRODUCTION
 
-This project uses an open source python package, DeepForest, to train and classify agricultural crops. DeepForest uses a deep learning object detection neural network and has pre-built model to predict bounding boxes of individual trees in RGB imagery. 
+This project uses an open source python package, DeepForest, to train and classify agricultural crops. DeepForest uses a deep learning object detection neural network and has pre-built model to predict bounding boxes of individual trees in RGB imagery.
 
 Documentation: https://deepforest.readthedocs.io/en/v1.3.3/landing.html
 
-The deepforest model is trained to perform object detection within bounding boxes for five crop classes: jute, maize, rice, sugarcane, wheat. 
+The deepforest model is trained to perform object detection within bounding boxes for five crop classes: jute, maize, rice, sugarcane, wheat.
 
 The model also uses CropModel to train an object classification model to classify the detected boxes for the five crop types. The model was tested for variety of datasets including images from various perspectives.
 
 The deepforest source code was installed locally and included in the base level of the project directory: https://github.com/weecology/DeepForest
 
+## PROJECT STRUCTURE
+
+```
+EcoDetect/
+├── README.md
+├── TrainObjectDetectionAndClassifierAndPredictCrops.ipynb  # Training, detection, classification, and prediction
+├── PredictionAnalysisForCanopyComplexity.ipynb             # Prediction analysis and canopy complexity study
+├── GenerateBoundingBoxesWithFullSizes.py                   # Utility script for bounding box generation
+└── data/
+    ├── test_crop_image/                                    # 50 test images (10 per crop)
+    ├── uav_crops_data_aerial/                              # Aerial dataset annotations
+    └── uav_crops_data_multiperspective/                    # Multi-perspective dataset annotations and images
+```
+
 ## INSTALLATION
 
-### Option 1: Local Mac Installation
+### Option 1: Local Installation
 
 Install deepforest from source code: https://deepforest.readthedocs.io/en/latest/installation.html
 
 **Install and activate conda packages:**
 
 ```bash
-conda deactivate 
+conda deactivate
 conda env remove -n env_name
 
 conda create -n deepforest python=3 pytorch torchvision -c pytorch
@@ -55,181 +69,79 @@ Python: Select Interpreter
 ```
 Select the current python version.
 
-### Option 2: Google Colab Installation
+### Option 2: Google Colab (Recommended)
 
-**Step 1: Restart Colab Runtime**
+The notebooks are designed to run in Google Colab with GPU support. Installation steps are included in the notebook cells.
 
-Go to "Runtime" → "Restart runtime". Do this before running any cells below.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dhruvyadati/EcoDetect/blob/main/TrainObjectDetectionAndClassifierAndPredictCrops.ipynb)
 
-**Step 2: Perform complete package uninstall**
+**To run in Colab:**
 
-```python
-print("--- Starting a complete, aggressive uninstall of all related packages ---")
-!pip uninstall -y \
-pytorch-lightning \
-torchmetrics \
-pandas \
-numpy \
-scipy \
-matplotlib \
-scikit-learn \
-deepforest \
-deepforest-pytorch \
-albumentations \
-opencv-python \
-Pillow \
-fiona \
-rasterio \
-geopandas \
-rtree \
-shapely
-```
-
-**Step 3: Install deepforest from GitHub**
-
-```python
-print("\n--- Installing deepforest from GitHub main branch ---")
-!pip install git+https://github.com/weecology/DeepForest.git@main
-!pip install scikit-learn
-```
-
-**Step 4: Verify installations**
-
-```python
-print("\n--- Installed Versions ---")
-!pip show numpy
-!pip show pandas
-!pip show torchmetrics
-!pip show pytorch-lightning
-!pip show albumentations
-!pip show deepforest
-```
+1. Open the notebook in Colab using the badge above or by uploading the `.ipynb` file
+2. Follow the numbered steps in the notebook comments (Steps 1-41)
+3. The notebook handles all dependency installation automatically
 
 ## DATASET PREPARATION
 
-### Local Dataset Setup
+### Image Source
 
-Images of the five crop types are downloaded from Kaggle datasets to "cropimages" directory. The trained images are written to the "data/crops_data" directory.
+Images of the five crop types are sourced from a public Kaggle dataset for agricultural classification.
 
-Source for kaggle: https://www.kaggle.com/datasets/aman2000jaiswal/agriculture-crop-images
+Source: https://www.kaggle.com/datasets/aman2000jaiswal/agriculture-crop-images
 
 ### Colab Dataset Setup
 
-**Required files to upload to /content folder:**
+Upload the following files to the Colab `/content` folder based on dataset type:
 
-The following files need to be uploaded based on dataset type (multiperspective or aerial):
+**For aerial dataset** (`multiperspective = False`):
+- `crops_aerial_images.zip` - training images
+- `crops_aerial_detection_annotations.csv` - detection bounding box annotations
+- `crops_aerial_classification_annotations.csv` - classification annotations
+- `test_crop_image.zip` - 50 test images for predictions
 
-**For multiperspective dataset:**
-- `crops_multiperspective_images.zip` - contains all training images
-- `crops_multiperspective_detection_annotations.csv` - detection annotations for training images
-- `crops_multiperspective_classification_annotations.csv` - classification annotations for training images
-- `test_crop_image.zip` - contains all test images for predictions
-
-**For aerial dataset:**
-- `crops_aerial_images.zip` - contains all training images
-- `crops_aerial_detection_annotations.csv` - detection annotations for training images
-- `crops_aerial_classification_annotations.csv` - classification annotations for training images
-- `test_crop_image.zip` - contains all test images for predictions
+**For multi-perspective dataset** (`multiperspective = True`):
+- `crops_multiperspective_images.zip` - training images
+- `crops_multiperspective_detection_annotations.csv` - detection bounding box annotations
+- `crops_multiperspective_classification_annotations.csv` - classification annotations
+- `test_crop_image.zip` - 50 test images for predictions
 
 **Important notes:**
-- Detection training excludes images where bounding box equals full image size (e.g., lines with 0,0,244,244)
-- Full-size images can mislead RetinaNet as there is no detection training if bounding box covers the whole image
-- Classification training uses full size images
-
-**Dataset preparation code for Colab:**
-
-```python
-import os
-
-# Set dataset type (True for multiperspective, False for aerial)
-multiperspective = True  # Change this based on dataset
-
-# Directory setup
-if multiperspective:
-    directory_path = "/content/data/uav_crops_data_multiperspective/"
-    print("Configuring for Multiperspective dataset directory.")
-else:
-    directory_path = "/content/data/uav_crops_data_aerial/"
-    print("Configuring for Aerial dataset directory.")
-
-# Create directory
-os.makedirs(directory_path, exist_ok=True)
-print(f"Directory '{directory_path}' created successfully (or already exists).")
-
-# Move annotation files
-if multiperspective:
-    detection_source_csv = "/content/crops_multiperspective_detection_annotations.csv"
-    classification_source_csv = "/content/crops_multiperspective_classification_annotations.csv"
-    zip_file = "crops_multiperspective_images.zip"
-else:
-    detection_source_csv = "/content/crops_aerial_detection_annotations.csv"
-    classification_source_csv = "/content/crops_aerial_classification_annotations.csv"
-    zip_file = "crops_aerial_images.zip"
-
-# Move annotation files
-!mv {detection_source_csv} {directory_path}
-!mv {classification_source_csv} {directory_path}
-
-# Unzip training images
-!unzip {zip_file} -d {directory_path}
-
-# Unzip test images
-!unzip test_crop_image.zip -d /content/data/
-```
+- Detection training excludes full-frame bounding boxes (e.g., 0,0,224,224) since they provide no localization information
+- Classification training uses full-frame images
+- The `multiperspective` flag at the top of the notebook controls which dataset is used
 
 ## CODE USAGE
 
-Follow installation and dataset preparation steps in README, then execute the following steps:
-
 ### Step 1: Train and Predict
-```bash
-python TrainObjectDetectionAndClassifierAndPredictCrops.py
-```
-Main class that trains the 1) detection, 2) classification models and predicts test crop images against the trained models. The prediction can be tested with different datasets:
-- `multiperspective = True` expects images taken with multiple perspectives
-- `multiperspective = False` expects images taken only with aerial imagery
 
-### Step 2: Visualize Results
-```bash
-python VisualizeBoundingBoxesOfPredictedImages.py
-```
-Run this to visualize previously predicted and archived image files. Unzip the previously loaded images into pred_output directory.
+Open `TrainObjectDetectionAndClassifierAndPredictCrops.ipynb` in Colab and run the cells sequentially. This notebook:
 
-### Step 3: Generate Analysis CSV 
-```bash
-python CreatePredictedOutputScoresCSV.py
-```
-Create a final CSV file with all the scores by merging all the individual tiles output csv files. This CSV file will be used to run analysis on accuracy scores of predictions.
+1. Installs dependencies and prepares the dataset
+2. Trains a ResNet-50 classification model (CropModel) on cropped images
+3. Trains a RetinaNet detection model (DeepForest) on bounding box annotations
+4. Runs predictions on 50 held-out test images
+5. Applies post-processing filters (size filter, sky filter) and generates annotated images
+6. Saves trained models, prediction CSVs, and annotated images
 
-### Step 4: Export Results 
-```bash
-python CreatePredictedOutputZip.py
-```
-Zip the predicted output files for download. Also remember to download the trained models.
+Set `multiperspective = True` or `False` at the top of the notebook to select the dataset.
 
-### Step 5: Prediction Analysis 
-```bash
-python PredictionAnalysisCorrectVsIncorrect.py
-python PredictionAnalysisForClassificationAccuracy.py
-python PredictionAnalysisForCanopyComplexity.py
-```
-Upload the predicted csv output files to Colab for analysis.
+### Step 2: Prediction Analysis
 
+Open `PredictionAnalysisForCanopyComplexity.ipynb` in Colab. Upload the prediction CSV files generated from Step 1 and run the cells. This notebook:
 
-### Optional Utility Files
+1. Adds true labels to prediction CSVs based on image filenames
+2. Analyzes correct vs. incorrect predictions by score bucket (aerial and multi-perspective)
+3. Computes per-class classification accuracy with confusion matrices
+4. Performs canopy complexity analysis comparing multi-perspective vs. aerial accuracy
+5. Runs statistical tests (Spearman rank correlation, one-way ANOVA)
 
-**GenerateBoundingBoxesWithFullSizes.py**
-```bash
-python GenerateBoundingBoxesWithFullSizes.py
-```
-Utility file to generate full-image-sized bounding boxes to make loading compatible with the source csv file format. This is for loading the full-sized images to train classification model. Full-sized images are not used in the detection model.
+### Utility Script
 
-**PlotHistogramForDatasetSizes.py**
-```bash
-python PlotHistogramForDatasetSizes.py
-```
-Utility file to display dataset distribution.
+**GenerateBoundingBoxesWithFullSizes.py** - Utility to generate full-image-sized bounding boxes for classification annotations. Used to make loading compatible with the source CSV format.
 
 ## OUTPUT
 
-Output of the predictions are saved to tiles_output CSV files with timestamps in the data directory.
+- Trained model weights are saved as `.pt` files with timestamps
+- Prediction results are saved as `tiles_output_*.csv` files
+- Annotated images with bounding boxes are saved to `pred_bounding_boxed_images/`
+- Merged prediction CSVs are generated for analysis
